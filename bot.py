@@ -59,7 +59,8 @@ async def ls(ctx):
         return await ctx.send("❌ You do not have permission to run this command.")
     
     services = get_services()
-    await ctx.send("Available servers:\n" + "\n".join(services))
+    print(services)
+    await ctx.send("Available servers:\n" + f"```\n{"\n".join(services)}\n```")
 
 @server.command()
 async def status(ctx):
@@ -72,6 +73,39 @@ async def status(ctx):
     
     await ctx.send(f"Server status:\n```NAME                  STATUS                     PORTS\n{result.stdout}\n```")
 
+@server.command()
+async def start(ctx, service: str):
+    if not has_role(ctx.author, AUTHORIZED_ROLE):
+        return await ctx.send("❌ You do not have permission to run this command.")
+    
+    services = get_services()
+    if service not in services:
+        return await ctx.send(f"❌ Server not found. Use /server ls to see available services.")
+    
+    await ctx.send(f"⏳ Starting server '{service}'...")
+    
+    result = subprocess.run(['docker-compose', 'up', '-d', service], capture_output=True, text=True)
+    if result.returncode != 0:
+        return await ctx.send(f"Error starting server")
+    
+    await ctx.send(f"✅ Server '{service}' started successfully.")
+
+@server.command()
+async def stop(ctx, service: str):
+    if not has_role(ctx.author, AUTHORIZED_ROLE):
+        return await ctx.send("❌ You do not have permission to run this command.")
+    
+    services = get_services()
+    if service not in services:
+        return await ctx.send(f"❌ Server not found. Use /server ls to see available services.")
+    
+    await ctx.send(f"⏳ Stopping server '{service}'...")
+    
+    result = subprocess.run(['docker-compose', 'down', service], capture_output=True, text=True)
+    if result.returncode != 0:
+        return await ctx.send(f"Error stopping server")
+    
+    await ctx.send(f"✅ Server '{service}' stopped successfully.")
 
 
 if __name__ == '__main__':
