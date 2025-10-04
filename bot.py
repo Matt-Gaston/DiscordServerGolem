@@ -15,6 +15,7 @@ APP_ID = os.getenv('APP_ID')
 PUB_KEY = os.getenv('PUB_KEY')
 PREFIX = os.getenv('PREFIX', '/')
 AUTHORIZED_ROLE = os.getenv('AUTHORIZED_ROLE')
+GUILD_ID = os.getenv('GUILD_ID', None)
 
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 
@@ -73,9 +74,9 @@ async def start(interaction: discord.Interaction, service: str):
     
     result = subprocess.run(['docker-compose', 'up', '-d', service], capture_output=True, text=True)
     if result.returncode != 0:
-        return await interaction.followup.edit_message(f"Error starting server")
+        return await interaction.edit_original_response(content = f"Error starting server")
     
-    await interaction.followup(f"✅ Server '{service}' started successfully.")
+    await interaction.edit_original_response(content = f"✅ Server '{service}' started successfully.")
 
 @server_group.command(name="stop", description="Stop a specified server")
 async def stop(interaction: discord.Interaction, service: str):
@@ -90,16 +91,16 @@ async def stop(interaction: discord.Interaction, service: str):
     
     result = subprocess.run(['docker-compose', 'down', service], capture_output=True, text=True)
     if result.returncode != 0:
-        return await interaction.followup.send_message(f"Error stopping server")
+        return await interaction.edit_original_response(content = f"Error stopping server")
     
-    await interaction.followup.edit_message(f"✅ Server '{service}' stopped successfully.")
+    await interaction.edit_original_response(content = f"✅ Server '{service}' stopped successfully.")
 
 
 
 @bot.event
 async def on_ready():
     tree.add_command(server_group)
-    await tree.sync(guild=discord.Object(293528955854651392))
+    await tree.sync(guild=discord.Object(GUILD_ID))
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
 
